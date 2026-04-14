@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>KPIlot — Analizador de KPIs con IA</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:#07070a;color:#f0ece6;min-height:100vh;line-height:1.6;-webkit-font-smoothing:antialiased}
+.hidden{display:none!important}
+:root{--o:#e8703c;--od:rgba(232,112,60,.12);--s:#0f0f14;--s2:#16161c;--bd:rgba(255,255,255,.07);--bd2:rgba(255,255,255,.13);--t:rgba(240,236,230,1);--t2:rgba(240,236,230,.55);--t3:rgba(240,236,230,.28);--r:12px;--rl:18px;--g:#4cae76;--a:#f0a030;--b:#4a8fe8}
+.nav{display:flex;align-items:center;justify-content:space-between;padding:0 2.5rem;height:62px;border-bottom:1px solid var(--bd);position:sticky;top:0;z-index:100;background:rgba(7,7,10,.9);backdrop-filter:blur(18px)}
+.logo{font-size:20px;font-weight:800;color:var(--t);letter-spacing:-.03em}.logo b{color:var(--o)}
+.btn-nav{background:var(--o);color:#fff;padding:8px 20px;border-radius:8px;font-size:14px;font-weight:600;border:none;cursor:pointer;font-family:inherit;transition:opacity .15s}
+.btn-nav:hover{opacity:.9}
+.nav-a{color:var(--t2);text-decoration:none;font-size:14px;transition:color .18s}.nav-a:hover{color:var(--t)}
+.hero{max-width:840px;margin:0 auto;padding:7rem 2rem 5rem;text-align:center}
+.badge{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--o);border:1px solid rgba(232,112,60,.22);padding:5px 15px;border-radius:100px;margin-bottom:2.25rem}
+.bdot{width:6px;height:6px;border-radius:50%;background:var(--o);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.hero h1{font-size:clamp(42px,8vw,74px);font-weight:800;line-height:1.04;letter-spacing:-.035em;color:var(--t);margin-bottom:1.5rem}
+.hero h1 i{font-style:normal;color:var(--o)}
+.hero-p{font-size:clamp(15px,2.5vw,18px);color:var(--t2);max-width:520px;margin:0 auto 2.75rem;font-weight:300;line-height:1.75}
+.hero-cta{display:flex;flex-direction:column;align-items:center;gap:.6rem;margin-bottom:3rem}
+.btn-big{background:var(--o);color:#fff;border:none;padding:15px 38px;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 28px rgba(232,112,60,.28);transition:all .2s}
+.btn-big:hover{opacity:.92;transform:translateY(-2px)}
+.hero-fine{font-size:12px;color:var(--t3)}
+.pills{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.pill{display:flex;align-items:center;gap:7px;background:var(--s);border:1px solid var(--bd2);padding:7px 16px;border-radius:100px;font-size:13px;color:var(--t2)}
+.pdot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.proof{display:flex;align-items:center;justify-content:center;gap:2.5rem;padding:1.5rem 2rem;border-top:1px solid var(--bd);border-bottom:1px solid var(--bd);max-width:840px;margin:0 auto;flex-wrap:wrap}
+.proof-i{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--t2)}
+.how{max-width:840px;margin:0 auto;padding:6rem 2rem;text-align:center}
+.stag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);margin-bottom:1rem}
+.how h2{font-size:clamp(28px,5vw,44px);font-weight:800;letter-spacing:-.025em;margin-bottom:4rem}
+.steps{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;align-items:center;gap:1rem;margin-bottom:3.5rem}
+.step{background:var(--s);border:1px solid var(--bd);border-radius:var(--rl);padding:2rem 1.5rem;text-align:left}
+.sn{font-size:44px;font-weight:800;color:rgba(232,112,60,.18);letter-spacing:-.04em;margin-bottom:.75rem;line-height:1}
+.st{font-size:15px;font-weight:700;margin-bottom:.35rem}
+.sd{font-size:13px;color:var(--t2)}
+.sarr{color:rgba(255,255,255,.14);font-size:22px;flex-shrink:0}
+footer{border-top:1px solid var(--bd);padding:2rem;text-align:center;font-size:13px;color:var(--t3)}
+#app{display:flex;min-height:100vh}
+.sidebar{width:214px;flex-shrink:0;background:var(--s);border-right:1px solid var(--bd);display:flex;flex-direction:column;padding:1.25rem .75rem;position:fixed;top:0;left:0;bottom:0;z-index:50}
+.sb-logo{font-size:18px;font-weight:800;letter-spacing:-.03em;color:var(--t);padding:.25rem .75rem 1.5rem}.sb-logo b{color:var(--o)}
+.sb-nav{display:flex;flex-direction:column;gap:3px;flex:1}
+.si{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;background:none;border:none;color:var(--t2);font-size:13.5px;font-family:inherit;cursor:pointer;text-align:left;width:100%;transition:all .15s}
+.si svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.si:hover:not(:disabled){background:rgba(255,255,255,.05);color:var(--t)}
+.si.active{background:var(--od);color:var(--o)}
+.si:disabled{opacity:.28;cursor:not-allowed}
+.sb-back{background:none;border:none;color:var(--t3);font-size:12px;cursor:pointer;font-family:inherit;padding:8px 12px;text-align:left;transition:color .2s}.sb-back:hover{color:var(--t2)}
+.main{margin-left:214px;flex:1;background:#07070a;padding:2.5rem 2rem;min-height:100vh;max-width:calc(100vw - 214px)}
+.view{display:none}.view.active{display:block}
+.vh{margin-bottom:2rem}.vh h2{font-size:22px;font-weight:800;color:var(--t);letter-spacing:-.025em;margin-bottom:4px}.vh p{font-size:14px;color:var(--t2)}
+.vhr{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:2rem}
+.vhr h2{font-size:22px;font-weight:800;letter-spacing:-.025em;margin-bottom:4px}.vhr p{font-size:14px;color:var(--t2)}
+.ha{display:flex;gap:8px;align-items:center}
+.dz{border:1.5px dashed var(--bd2);border-radius:var(--rl);padding:3rem 2rem;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:1.25rem;background:var(--s);max-width:640px}
+.dz:hover,.dz.drag{border-color:rgba(232,112,60,.5);background:rgba(232,112,60,.04)}
+.dzi{width:52px;height:52px;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid var(--bd2);display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem}
+.dzi svg{width:22px;height:22px;stroke:var(--t2);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.dzt{font-size:15px;font-weight:700;margin-bottom:6px}.dzs{font-size:13px;color:var(--t2);margin-bottom:1rem}
+.dzf{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.fmt{font-size:11px;padding:3px 10px;border-radius:100px;background:rgba(255,255,255,.05);border:1px solid var(--bd);color:var(--t2)}
+input[type=file]{display:none}
+.frow{display:flex;align-items:center;gap:12px;background:var(--s);border:1px solid var(--bd);border-radius:10px;padding:12px 14px;margin-bottom:1.25rem;max-width:640px}
+.fext{font-size:11px;font-weight:800;padding:5px 8px;border-radius:6px;background:var(--od);color:var(--o);flex-shrink:0;letter-spacing:.04em}
+.finf{flex:1;min-width:0}.fn{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.fsz{font-size:12px;color:var(--t2);margin-top:1px}
+.frm{background:none;border:none;color:var(--t3);cursor:pointer;font-size:20px;line-height:1;padding:2px 4px;flex-shrink:0}.frm:hover{color:var(--t2)}
+.ctx{margin-bottom:1.5rem;max-width:640px}.ctx label{display:block;font-size:13px;color:var(--t2);margin-bottom:8px}
+textarea{width:100%;background:var(--s);border:1px solid var(--bd);border-radius:10px;padding:12px 14px;color:var(--t);font-size:14px;font-family:inherit;resize:vertical;outline:none;transition:border-color .2s;line-height:1.5}
+textarea:focus{border-color:rgba(232,112,60,.4)}textarea::placeholder{color:var(--t3)}
+.btn-a{display:flex;align-items:center;gap:10px;background:var(--o);color:#fff;border:none;padding:14px 28px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s;max-width:640px;justify-content:center;width:100%;box-shadow:0 4px 20px rgba(232,112,60,.2)}
+.btn-a:hover:not(:disabled){opacity:.9;transform:translateY(-1px)}.btn-a:disabled{opacity:.3;cursor:not-allowed;box-shadow:none}
+.btn-a svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.prog{max-width:640px;margin-top:1.25rem}.pt{height:3px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden;margin-bottom:10px}
+.pf{height:100%;background:var(--o);border-radius:2px;width:0%;transition:width .5s ease}.ptx{font-size:13px;color:var(--t2)}
+.err-box{max-width:640px;margin-top:1rem;background:rgba(232,74,74,.1);border:1px solid rgba(232,74,74,.3);border-radius:10px;padding:12px 16px;font-size:14px;color:#f08080;display:none}
+.samp{margin-top:2.5rem;max-width:640px}.samp-l{font-size:13px;color:var(--t3);margin-bottom:10px}
+.samp-r{display:flex;gap:8px;flex-wrap:wrap}
+.btn-s{background:none;border:1px solid var(--bd);color:var(--t2);padding:7px 15px;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit;transition:all .15s}.btn-s:hover{border-color:rgba(232,112,60,.4);color:var(--o)}
+.atabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1.75rem}
+.atab{background:none;border:1px solid var(--bd);color:var(--t2);padding:6px 16px;border-radius:100px;font-size:13px;cursor:pointer;font-family:inherit;transition:all .15s}.atab:hover{border-color:var(--bd2);color:var(--t)}.atab.active{background:var(--o);border-color:var(--o);color:#fff}
+.kg{display:grid;grid-template-columns:repeat(auto-fill,minmax(178px,1fr));gap:10px;margin-bottom:1.75rem}
+.kc{background:var(--s);border:1px solid var(--bd);border-radius:var(--r);padding:1.1rem 1.2rem;transition:border-color .2s}.kc:hover{border-color:var(--bd2)}
+.kl{font-size:12px;color:var(--t2);margin-bottom:6px}.kv{font-size:22px;font-weight:800;color:var(--t);margin-bottom:5px;letter-spacing:-.02em}
+.kch{font-size:12px;display:flex;align-items:center;gap:3px}.kch.up{color:var(--g)}.kch.down{color:#e84a4a}.kch.neutral{color:var(--t3)}
+.cr{display:grid;grid-template-columns:1fr 256px;gap:12px;margin-bottom:1.75rem}
+.cc{background:var(--s);border:1px solid var(--bd);border-radius:var(--rl);padding:1.25rem}
+.ctt{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--t3);margin-bottom:1rem}
+.cw{position:relative;height:188px}
+.br{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.bc{background:var(--s);border:1px solid var(--bd);border-radius:var(--rl);padding:1.25rem}
+.btt{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--t3);margin-bottom:1rem}
+.ii{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--bd);font-size:13.5px;color:var(--t2);line-height:1.5}.ii:last-child{border-bottom:none}
+.id{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:5px}.id.good{background:var(--g)}.id.warn{background:var(--a)}.id.info{background:var(--b)}
+.ri{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--bd);font-size:13.5px;color:var(--t2);line-height:1.5}.ri:last-child{border-bottom:none}
+.rn{font-size:12px;font-weight:800;color:var(--o);flex-shrink:0;margin-top:1px;min-width:18px}
+.bico{background:rgba(255,255,255,.05);border:1px solid var(--bd);color:var(--t2);width:36px;height:36px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}.bico:hover{background:rgba(255,255,255,.08);color:var(--t)}
+.bico svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.bdl{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.06);border:1px solid var(--bd);color:var(--t);padding:8px 16px;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit;transition:all .15s}.bdl:hover{background:rgba(255,255,255,.09)}
+.bdl svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.rw{max-width:720px}.rc{background:var(--s);border:1px solid var(--bd);border-radius:var(--rl);padding:2.5rem}
+.rs{margin-bottom:2rem}
+.rtt{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--o);margin-bottom:1rem;padding-bottom:.5rem;border-bottom:1px solid rgba(232,112,60,.14)}
+.rtbl{width:100%;border-collapse:collapse;font-size:13.5px}.rtbl th{text-align:left;padding:7px 10px;color:var(--t3);font-weight:600;font-size:12px;border-bottom:1px solid var(--bd)}.rtbl td{padding:9px 10px;border-bottom:1px solid rgba(255,255,255,.03);color:var(--t2)}.rtbl tr:last-child td{border-bottom:none}
+.cw2{height:calc(100vh - 260px);min-height:320px;overflow-y:auto;padding:.75rem 0;display:flex;flex-direction:column;gap:.75rem;margin-bottom:1rem}
+.cw2::-webkit-scrollbar{width:4px}.cw2::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:2px}
+.cm{display:flex;gap:10px;align-items:flex-start;max-width:660px}.cm.u{flex-direction:row-reverse;align-self:flex-end}
+.cav{width:30px;height:30px;border-radius:8px;background:var(--od);color:var(--o);font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.cm.u .cav{background:rgba(255,255,255,.07);color:var(--t2)}
+.cb{background:var(--s);border:1px solid var(--bd);border-radius:12px;padding:10px 14px;font-size:14px;color:var(--t2);line-height:1.6}.cm.u .cb{background:var(--od);border-color:rgba(232,112,60,.2)}
+.csg{display:flex;flex-wrap:wrap;gap:6px;padding-top:.25rem}.csg button{background:none;border:1px solid var(--bd);color:var(--t2);padding:5px 12px;border-radius:7px;font-size:12.5px;cursor:pointer;font-family:inherit;transition:all .15s}.csg button:hover{border-color:rgba(232,112,60,.4);color:var(--o)}
+.cin{display:flex;gap:8px;align-items:flex-end}.cin textarea{flex:1;resize:none;min-height:46px;max-height:110px;margin:0}
+.bsnd{background:var(--o);border:none;width:46px;height:46px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity .15s}.bsnd:hover{opacity:.85}
+.bsnd svg{width:15px;height:15px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.typ{display:flex;gap:4px;align-items:center;padding:10px 14px}.typ span{width:6px;height:6px;border-radius:50%;background:var(--t3);animation:bo 1.2s infinite}.typ span:nth-child(2){animation-delay:.2s}.typ span:nth-child(3){animation-delay:.4s}
+@keyframes bo{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-5px)}}
+@media(max-width:900px){.cr,.br{grid-template-columns:1fr}}
+@media(max-width:700px){.steps{grid-template-columns:1fr}.sarr{display:none}.sidebar{width:54px}.si span,.sb-back{display:none}.main{margin-left:54px;max-width:calc(100vw - 54px);padding:1.5rem 1rem}.nav{padding:0 1rem}.hero{padding:4rem 1.25rem 3.5rem}}
+@media print{body{background:#fff;color:#000}.sidebar,.ha,.bdl,nav,footer,#landing{display:none!important}.main{margin-left:0;max-width:100%}.rc{border:none;background:none;padding:0}}
+</style>
+</head>
+<body>
+
+<!-- LANDING -->
+<div id="landing">
+  <nav class="nav">
+    <div class="logo">KPI<b>lot</b></div>
+    <div style="display:flex;align-items:center;gap:2rem">
+      <a href="#como" class="nav-a">Cómo funciona</a>
+      <button class="btn-nav" onclick="goToApp()">Empezar gratis</button>
+    </div>
+  </nav>
+  <section class="hero">
+    <div class="badge"><span class="bdot"></span>IA · Análisis de datos · Español</div>
+    <h1>Tu empresa habla.<br>Nosotros la <i>escuchamos</i>.</h1>
+    <p class="hero-p">Subí cualquier archivo con datos de tu negocio y la IA detecta todos los KPIs automáticamente — aunque no sepas qué buscar.</p>
+    <div class="hero-cta">
+      <button class="btn-big" onclick="goToApp()">Analizar mis datos →</button>
+      <span class="hero-fine">Sin registro · Sin tarjeta · 100% gratis</span>
+    </div>
+    <div class="pills">
+      <div class="pill"><span class="pdot" style="background:#4cae76"></span>Ventas</div>
+      <div class="pill"><span class="pdot" style="background:#4a8fe8"></span>Finanzas</div>
+      <div class="pill"><span class="pdot" style="background:#f0a030"></span>RRHH</div>
+      <div class="pill"><span class="pdot" style="background:#9b74e0"></span>Operaciones</div>
+      <div class="pill"><span class="pdot" style="background:#e84a4a"></span>Marketing</div>
+    </div>
+  </section>
+  <div class="proof">
+    <div class="proof-i">⚡ Análisis en segundos</div>
+    <div class="proof-i">🔒 Datos privados y seguros</div>
+    <div class="proof-i">📊 +30 KPIs por análisis</div>
+    <div class="proof-i">📁 Excel, CSV, PDF y Word</div>
+  </div>
+  <section class="how" id="como">
+    <div class="stag">Cómo funciona</div>
+    <h2>Tres pasos. Cero esfuerzo.</h2>
+    <div class="steps">
+      <div class="step"><div class="sn">01</div><div class="st">Subís tu archivo</div><div class="sd">Excel, CSV, PDF o Word. Lo que tengas, sin preparación.</div></div>
+      <div class="sarr">→</div>
+      <div class="step"><div class="sn">02</div><div class="st">La IA lo analiza</div><div class="sd">Detecta todos los KPIs posibles y los organiza por área en segundos.</div></div>
+      <div class="sarr">→</div>
+      <div class="step"><div class="sn">03</div><div class="st">Tomás decisiones</div><div class="sd">Dashboard completo, hallazgos clave y recomendaciones accionables.</div></div>
+    </div>
+    <button class="btn-big" onclick="goToApp()">Probar ahora, es gratis →</button>
+  </section>
+  <footer>© 2025 KPIlot · Análisis inteligente para empresas</footer>
+</div>
+
+<!-- APP -->
+<div id="app" class="hidden">
+  <aside class="sidebar">
+    <div class="sb-logo">KPI<b>lot</b></div>
+    <nav class="sb-nav">
+      <button class="si active" onclick="showView('upload')" id="nav-upload"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><span>Subir datos</span></button>
+      <button class="si" onclick="showView('dashboard')" id="nav-dashboard" disabled><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg><span>Dashboard</span></button>
+      <button class="si" onclick="showView('reporte')" id="nav-reporte" disabled><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg><span>Reporte</span></button>
+      <button class="si" onclick="showView('chat')" id="nav-chat" disabled><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Chat IA</span></button>
+    </nav>
+    <button class="sb-back" onclick="goToLanding()">← Inicio</button>
+  </aside>
+  <main class="main">
+
+    <!-- UPLOAD -->
+    <div id="view-upload" class="view active">
+      <div class="vh"><h2>Subir datos</h2><p>La IA detecta todos los KPIs de tu empresa automáticamente</p></div>
+      <div class="dz" id="dropZone" onclick="document.getElementById('fi').click()">
+        <input type="file" id="fi" accept=".csv,.xlsx,.xls,.txt"/>
+        <div class="dzi"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+        <div class="dzt">Arrastrá tu archivo aquí</div>
+        <div class="dzs">o hacé click para seleccionar</div>
+        <div class="dzf"><span class="fmt">Excel</span><span class="fmt">CSV</span><span class="fmt">TXT</span></div>
+      </div>
+      <div id="fprev"></div>
+      <div class="ctx"><label>Contexto opcional — ¿a qué se dedica tu empresa?</label>
+        <textarea id="ctx" placeholder="Ej: Somos una empresa de e-commerce de ropa. Este archivo tiene las ventas del último trimestre..." rows="3"></textarea></div>
+      <button class="btn-a" id="ab" disabled onclick="startAnalysis()">
+        <span id="abl">Analizar con IA</span>
+        <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </button>
+      <div class="prog hidden" id="pb"><div class="pt"><div class="pf" id="pf"></div></div><div class="ptx" id="ptx">Procesando...</div></div>
+      <div class="err-box" id="errBox"></div>
+      <div class="samp"><div class="samp-l">¿No tenés un archivo? Probá con datos de ejemplo:</div>
+        <div class="samp-r">
+          <button class="btn-s" onclick="loadSample('ventas')">📈 Ventas mensuales</button>
+          <button class="btn-s" onclick="loadSample('rrhh')">👥 Datos de RRHH</button>
+          <button class="btn-s" onclick="loadSample('finanzas')">💰 Estado financiero</button>
+          <button class="btn-s" onclick="loadSample('ecommerce')">🛒 E-commerce</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="view-dashboard" class="view hidden">
+      <div class="vhr">
+        <div><h2 id="dt">Dashboard</h2><p id="ds">Análisis generado por IA</p></div>
+        <div class="ha">
+          <button class="bico" onclick="showView('reporte')" title="Ver reporte"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></button>
+          <button class="bico" onclick="showView('upload')" title="Nuevo análisis"><svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg></button>
+        </div>
+      </div>
+      <div class="atabs" id="at"></div>
+      <div class="kg" id="kg"></div>
+      <div class="cr">
+        <div class="cc"><div class="ctt" id="c1t">Evolución</div><div class="cw"><canvas id="mc" role="img" aria-label="Gráfico principal"></canvas></div></div>
+        <div class="cc"><div class="ctt">Composición</div><div class="cw"><canvas id="pc" role="img" aria-label="Composición"></canvas></div></div>
+      </div>
+      <div class="br">
+        <div class="bc"><div class="btt">Hallazgos clave</div><div id="il"></div></div>
+        <div class="bc"><div class="btt">Recomendaciones</div><div id="rl"></div></div>
+      </div>
+    </div>
+
+    <!-- REPORTE -->
+    <div id="view-reporte" class="view hidden">
+      <div class="vhr">
+        <div><h2>Reporte ejecutivo</h2><p>Listo para compartir con tu equipo</p></div>
+        <div class="ha"><button class="bdl" onclick="window.print()"><svg viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Imprimir / PDF</button></div>
+      </div>
+      <div class="rw"><div class="rc" id="rc"></div></div>
+    </div>
+
+    <!-- CHAT -->
+    <div id="view-chat" class="view hidden">
+      <div class="vh"><h2>Chat con IA</h2><p>Preguntá cualquier cosa sobre tus datos</p></div>
+      <div class="cw2" id="cwin"></div>
+      <div class="cin">
+        <textarea id="ci" placeholder="Preguntá sobre tus KPIs..." rows="1" onkeydown="ck(event)"></textarea>
+        <button class="bsnd" onclick="sc()"><svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+let gD=null,mCh=null,pCh=null,hist=[],sFile=null,sKey=null;
+
+function goToApp(){document.getElementById('landing').classList.add('hidden');document.getElementById('app').classList.remove('hidden')}
+function goToLanding(){document.getElementById('app').classList.add('hidden');document.getElementById('landing').classList.remove('hidden')}
+function showView(n){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.querySelectorAll('.si').forEach(b=>b.classList.remove('active'));document.getElementById('view-'+n).classList.add('active');document.getElementById('nav-'+n).classList.add('active')}
+
+// FILE HANDLING
+const dz=document.getElementById('dropZone'),fi=document.getElementById('fi'),ab=document.getElementById('ab');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag')});
+dz.addEventListener('dragleave',()=>dz.classList.remove('drag'));
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag');if(e.dataTransfer.files[0])hf(e.dataTransfer.files[0])});
+fi.addEventListener('change',e=>{if(e.target.files[0])hf(e.target.files[0])});
+function hf(f){sFile=f;sKey=null;const ext=f.name.split('.').pop().toUpperCase();const sz=f.size<1048576?Math.round(f.size/1024)+' KB':(f.size/1048576).toFixed(1)+' MB';
+  document.getElementById('fprev').innerHTML=`<div class="frow"><div class="fext">${ext}</div><div class="finf"><div class="fn">${f.name}</div><div class="fsz">${sz}</div></div><button class="frm" onclick="cf()">×</button></div>`;ab.disabled=false}
+function cf(){sFile=null;sKey=null;document.getElementById('fprev').innerHTML='';ab.disabled=true;fi.value=''}
+
+// SAMPLES
+const S={
+  ventas:{n:'ventas-mensuales.csv',ctx:'Empresa de distribución mayorista. Datos de ventas del último año.',c:`Mes,Ventas,Unidades,Clientes,Devoluciones,Costo\nEnero,890000,240,180,12000,534000\nFebrero,950000,255,195,9500,570000\nMarzo,1050000,280,210,11000,630000\nAbril,980000,262,198,10200,588000\nMayo,1100000,295,225,8900,660000\nJunio,1240000,330,248,7800,744000\nJulio,1180000,315,239,9100,708000\nAgosto,1320000,352,268,6500,792000\nSeptiembre,1280000,340,255,7200,768000\nOctubre,1150000,308,234,8400,690000\nNoviembre,1420000,378,290,5900,852000\nDiciembre,1680000,448,340,4800,1008000`},
+  rrhh:{n:'rrhh.csv',ctx:'Empresa de servicios con 95 empleados.',c:`Departamento,Empleados,Rotacion,Ausencias,Capacitacion,Salario,Satisfaccion\nVentas,28,22,4.2,18,85000,7.1\nTecnologia,18,15,2.8,42,120000,8.2\nOperaciones,24,18,5.1,12,72000,6.8\nAdministracion,12,8,3.4,8,68000,7.5\nMarketing,8,12,2.9,24,90000,7.8\nRRHH,5,5,2.1,35,82000,8.5`},
+  finanzas:{n:'finanzas.csv',ctx:'PyME industrial. Estados financieros anuales.',c:`Concepto,Q1,Q2,Q3,Q4\nIngresos,2800000,3100000,3400000,4200000\nCosto_ventas,1680000,1860000,2040000,2520000\nGanancia_bruta,1120000,1240000,1360000,1680000\nGastos_operativos,750000,820000,890000,980000\nEBITDA,370000,420000,470000,700000\nResultado_neto,243000,295000,347000,580000\nDeuda_total,1800000,1720000,1640000,1500000`},
+  ecommerce:{n:'ecommerce.csv',ctx:'Tienda online de indumentaria.',c:`Mes,Visitas,Pedidos,Ticket,CAC,LTV,Churn,NPS\nEnero,48000,1456,3200,850,18000,4.2,42\nFebrero,52000,1736,3350,820,19200,3.8,45\nMarzo,61000,2244,3480,790,20500,3.5,47\nAbril,58000,2016,3290,810,20100,3.7,46\nMayo,67000,2628,3550,775,21300,3.2,51\nJunio,74000,3159,3720,748,22800,2.9,54`}
+};
+function loadSample(k){sKey=k;sFile=null;document.getElementById('ctx').value=S[k].ctx;
+  document.getElementById('fprev').innerHTML=`<div class="frow"><div class="fext">CSV</div><div class="finf"><div class="fn">${S[k].n}</div><div class="fsz">Datos de ejemplo</div></div><button class="frm" onclick="cf()">×</button></div>`;
+  ab.disabled=false;fi.value=''}
+
+// READ FILE
+async function rf(f){return new Promise(res=>{const e=f.name.split('.').pop().toLowerCase();
+  if(['csv','txt'].includes(e)){const r=new FileReader();r.onload=x=>res(x.target.result||'');r.readAsText(f,'UTF-8');return}
+  if(['xlsx','xls'].includes(e)&&window.XLSX){const r=new FileReader();r.onload=x=>{try{const wb=XLSX.read(x.target.result,{type:'array'});let t='';wb.SheetNames.forEach(n=>{t+=`Hoja: ${n}\n`+XLSX.utils.sheet_to_csv(wb.Sheets[n])+'\n\n'});res(t)}catch{res('Excel: '+f.name)}};r.readAsArrayBuffer(f);return}
+  res('Archivo: '+f.name)})}
+
+// ANALYSIS
+async function startAnalysis(){
+  let content='',fname='';
+  if(sKey){content=S[sKey].c;fname=S[sKey].n}
+  else if(sFile){content=await rf(sFile);fname=sFile.name}
+  else return;
+  const ctx=document.getElementById('ctx').value.trim();
+  ab.disabled=true;
+  document.getElementById('pb').classList.remove('hidden');
+  document.getElementById('errBox').style.display='none';
+  sp(10,'Leyendo el archivo...');await sl(300);
+  sp(40,'La IA está analizando tus datos...');
+  let d=null;
+  try{
+    const resp=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({fileName:fname,fileContent:content,context:ctx})});
+    if(!resp.ok){const e=await resp.json();throw new Error(e.error||'Error del servidor')}
+    d=await resp.json();
+    sp(90,'Construyendo dashboard...');await sl(300);
+  }catch(e){
+    console.error(e);
+    document.getElementById('pb').classList.add('hidden');
+    const eb=document.getElementById('errBox');
+    eb.style.display='block';
+    eb.textContent='❌ Error: '+e.message+'. Verificá que la API Key esté configurada correctamente en Vercel.';
+    ab.disabled=false;return;
+  }
+  sp(100,'¡Listo!');await sl(200);
+  document.getElementById('pb').classList.add('hidden');ab.disabled=false;
+  gD=d;hist=[];rDash(d);rRep(d);iChat(d);
+  ['dashboard','reporte','chat'].forEach(x=>document.getElementById('nav-'+x).disabled=false);
+  showView('dashboard');
+}
+function sp(p,t){document.getElementById('pf').style.width=p+'%';document.getElementById('ptx').textContent=t}
+const sl=ms=>new Promise(r=>setTimeout(r,ms));
+
+// DASHBOARD
+function rDash(d){
+  document.getElementById('dt').textContent=d.empresa_tipo||'Dashboard';
+  document.getElementById('ds').textContent=(d.periodo||'')+' · Análisis por IA';
+  const at=document.getElementById('at');at.innerHTML='';
+  d.areas.forEach((a,i)=>{const b=document.createElement('button');b.className='atab'+(i===0?' active':'');b.textContent=a.nombre;
+    b.onclick=()=>{document.querySelectorAll('.atab').forEach(t=>t.classList.remove('active'));b.classList.add('active');rKPIs(d.areas[i].kpis)};at.appendChild(b)});
+  rKPIs(d.areas[0].kpis);rCharts(d);
+  document.getElementById('il').innerHTML=d.hallazgos.map(h=>`<div class="ii"><span class="id ${h.tipo}"></span><span>${h.texto}</span></div>`).join('');
+  document.getElementById('rl').innerHTML=d.recomendaciones.map((r,i)=>`<div class="ri"><span class="rn">${i+1}.</span><span>${r}</span></div>`).join('');
+}
+function rKPIs(kpis){document.getElementById('kg').innerHTML=kpis.map(k=>{const a=k.tendencia==='up'?'↑':k.tendencia==='down'?'↓':'→';return`<div class="kc"><div class="kl">${k.nombre}</div><div class="kv">${k.valor}</div><div class="kch ${k.tendencia}">${a} ${k.cambio}</div></div>`}).join('')}
+function rCharts(d){
+  if(mCh){mCh.destroy();mCh=null}if(pCh){pCh.destroy();pCh=null}
+  document.getElementById('c1t').textContent=d.chart_titulo||'Evolución';
+  const to={backgroundColor:'#1a1a1f',titleColor:'#f0ece6',bodyColor:'#f0ece6',borderColor:'rgba(255,255,255,.1)',borderWidth:1};
+  mCh=new Chart(document.getElementById('mc'),{type:'bar',data:{labels:d.chart_labels||[],datasets:[{data:d.chart_values||[],backgroundColor:'rgba(232,112,60,.65)',borderColor:'#e8703c',borderWidth:1,borderRadius:4,hoverBackgroundColor:'#e8703c'}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{...to,callbacks:{label:c=>{const v=c.parsed.y;return' '+(v>=1e6?'$'+(v/1e6).toFixed(1)+'M':v>=1e3?'$'+Math.round(v/1e3)+'K':v.toLocaleString())}}}},
+      scales:{x:{grid:{display:false},ticks:{color:'rgba(240,236,230,.4)',font:{size:11}}},y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'rgba(240,236,230,.4)',font:{size:11},callback:v=>v>=1e6?'$'+(v/1e6).toFixed(1)+'M':v>=1e3?'$'+Math.round(v/1e3)+'K':v}}}}});
+  if(d.pie_labels)pCh=new Chart(document.getElementById('pc'),{type:'doughnut',data:{labels:d.pie_labels,datasets:[{data:d.pie_values,backgroundColor:['#e8703c','#4a8fe8','#4cae76','#9b74e0'],borderWidth:0}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{position:'bottom',labels:{color:'rgba(240,236,230,.45)',font:{size:11},boxWidth:10,padding:10}},tooltip:{...to}}}});
+}
+
+// REPORT
+function rRep(d){
+  const f=new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'long',year:'numeric'});
+  const cl={good:'#4cae76',warn:'#f0a030',info:'#4a8fe8'};
+  let h=`<div class="rs"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem"><div style="font-size:24px;font-weight:800">KPI<span style="color:#e8703c">lot</span></div><div style="font-size:13px;color:rgba(240,236,230,.4)">${f}</div></div><div style="font-size:18px;font-weight:700;margin-bottom:4px">${d.empresa_tipo}</div><div style="font-size:14px;color:rgba(240,236,230,.4)">${d.periodo||''}</div></div>`;
+  d.areas.forEach(a=>{h+=`<div class="rs"><div class="rtt">${a.nombre}</div><table class="rtbl"><thead><tr><th>KPI</th><th>Valor</th><th>Variación</th></tr></thead><tbody>${a.kpis.map(k=>{const ar=k.tendencia==='up'?'↑':k.tendencia==='down'?'↓':'→';const c=k.tendencia==='up'?'#4cae76':k.tendencia==='down'?'#e84a4a':'rgba(240,236,230,.35)';return`<tr><td>${k.nombre}</td><td style="font-weight:700;color:#f0ece6">${k.valor}</td><td style="color:${c}">${ar} ${k.cambio}</td></tr>`}).join('')}</tbody></table></div>`});
+  h+=`<div class="rs"><div class="rtt">Hallazgos</div>${d.hallazgos.map(x=>`<div style="display:flex;gap:10px;margin-bottom:12px;font-size:14px;color:rgba(240,236,230,.75);line-height:1.5"><span style="color:${cl[x.tipo]};flex-shrink:0">●</span>${x.texto}</div>`).join('')}</div><div class="rs"><div class="rtt">Recomendaciones</div>${d.recomendaciones.map((r,i)=>`<div style="display:flex;gap:12px;margin-bottom:12px;font-size:14px;color:rgba(240,236,230,.75);line-height:1.5"><span style="color:#e8703c;font-weight:800;flex-shrink:0">${i+1}.</span>${r}</div>`).join('')}</div>`;
+  document.getElementById('rc').innerHTML=h;
+}
+
+// CHAT
+function iChat(d){
+  hist=[];document.getElementById('cwin').innerHTML=`<div class="cm"><div class="cav">K</div><div class="cb">¡Hola! Analicé los datos de <strong>${d.empresa_tipo}</strong> y encontré <strong>${d.areas.reduce((s,a)=>s+a.kpis.length,0)} KPIs</strong> en ${d.areas.length} áreas. Preguntame lo que quieras.</div></div>
+  <div class="csg" id="csg"><button onclick="ss(this)">¿Cuál es el KPI más preocupante?</button><button onclick="ss(this)">¿Cómo mejorar los resultados?</button><button onclick="ss(this)">¿Qué priorizar este mes?</button><button onclick="ss(this)">Resumen ejecutivo</button></div>`}
+function ss(b){document.getElementById('csg')?.remove();sm(b.textContent)}
+function ck(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sc()}}
+function sc(){const el=document.getElementById('ci');const t=el.value.trim();if(!t)return;el.value='';sm(t)}
+async function sm(text){
+  const w=document.getElementById('cwin');
+  w.innerHTML+=`<div class="cm u"><div class="cav">Tú</div><div class="cb">${ex(text)}</div></div>`;
+  const tid='t'+Date.now();
+  w.innerHTML+=`<div class="cm" id="${tid}"><div class="cav">K</div><div class="cb"><div class="typ"><span></span><span></span><span></span></div></div></div>`;
+  w.scrollTop=w.scrollHeight;hist.push({role:'user',content:text});
+  let reply='';
+  try{
+    const ctx={empresa:gD.empresa_tipo,periodo:gD.periodo,areas:gD.areas.map(a=>({n:a.nombre,kpis:a.kpis.map(k=>`${k.nombre}: ${k.valor} (${k.cambio})`)})),hallazgos:gD.hallazgos.map(h=>h.texto),recomendaciones:gD.recomendaciones};
+    const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:hist,kpiContext:ctx})});
+    const dd=await r.json();reply=dd.text||'No pude procesar esa consulta.';
+  }catch{reply='Hubo un error de conexión. Intentá de nuevo.'}
+  hist.push({role:'assistant',content:reply});
+  document.getElementById(tid)?.remove();
+  w.innerHTML+=`<div class="cm"><div class="cav">K</div><div class="cb">${reply.replace(/\n/g,'<br>')}</div></div>`;
+  w.scrollTop=w.scrollHeight;
+}
+function ex(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+</script>
+</body>
+</html>
